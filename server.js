@@ -11,7 +11,7 @@ const TOKEN_PATH = 'token.json';
 fs.readFile('credentials.json', (err, content) => {
   if (err) return console.log('Error loading client secret file:', err);
   // Authorize a client with credentials, then call the Google Sheets API.
-  authorize(JSON.parse(content), listMajors);
+  authorize(JSON.parse(content), logSheetContent);
 });
 
 /**
@@ -69,15 +69,21 @@ function getNewToken(oAuth2Client, callback) {
  * @see https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
  * @param {google.auth.OAuth2} auth The authenticated Google OAuth client.
  */
-function listMajors(auth) {
+function logSheetContent(auth) {
+
   const sheets = google.sheets({version: 'v4', auth});
+
   sheets.spreadsheets.get({
     spreadsheetId: secrets.spreadsheetID,
     range: [],
   }, (err, res) => {
     if (err) return console.log('The API returned an error: ' + err);
     if(res.status === 200) {
+      const totalSheets = res.data.sheets;
+      const sheetNames = totalSheets.map(sheet => sheet.properties.title);
       console.log(`it worked..reading from sheet ${res.data.properties.title}`); // eslint-disable-line
+      const lastRowIndex = res.data.sheets[0].bandedRanges[0].range.endRowIndex;
+      console.log(`sheetNames ${sheetNames}`);
     }
     console.log(res); // eslint-disable-line
   });
